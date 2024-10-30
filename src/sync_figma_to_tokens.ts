@@ -4,7 +4,6 @@ import * as fs from 'fs'
 import FigmaApi from './figma_api.js'
 
 import { green } from './utils.js'
-import { tokenFilesFromLocalVariables } from './token_export.js'
 
 /**
  * Usage:
@@ -23,9 +22,8 @@ async function main() {
   const fileKey = process.env.FILE_KEY
 
   const api = new FigmaApi(process.env.PERSONAL_ACCESS_TOKEN)
-  const localVariables = await api.getLocalVariables(fileKey)
-
-  const tokensFiles = tokenFilesFromLocalVariables(localVariables)
+  const fileContent = (await api.getLocalVariables(fileKey)).meta
+  console.log(fileContent)
 
   let outputDir = 'tokens_new'
   const outputArgIdx = process.argv.indexOf('--output')
@@ -37,10 +35,9 @@ async function main() {
     fs.mkdirSync(outputDir)
   }
 
-  Object.entries(tokensFiles).forEach(([fileName, fileContent]) => {
-    fs.writeFileSync(`${outputDir}/${fileName}`, JSON.stringify(fileContent, null, 2))
-    console.log(`Wrote ${fileName}`)
-  })
+  const fileName = 'output.json'
+  fs.writeFileSync(`${outputDir}/${fileName}`, JSON.stringify(fileContent, null, 2))
+  console.log(`Wrote ${fileName}`)
 
   console.log(green(`✅ Tokens files have been written to the ${outputDir} directory`))
 }
